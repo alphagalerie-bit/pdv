@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Club Alpha PDV</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <!-- VERSÃO DO PDV — atualizar a cada deploy para invalidar cache -->
+  <meta name="pdv-version" content="2026.05.01-01" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080808;--bg2:#111;--bg3:#181818;--bg4:#1e1e1e;
+      --line:#222;--line2:#2a2a2a;
+      --gold:#c9a961;--gold2:#e8c97a;--gold3:rgba(201,169,97,0.1);
+      --text:#f0ece4;--dim:#555;--dim2:#888;
+      --green:#4ade80;--red:#ef4444;--orange:#f59e0b;--blue:#60a5fa;--purple:#a78bfa;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+    /* HEADER */
+    header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--bg2);flex-shrink:0;gap:16px;}
+    .brand{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);letter-spacing:0.05em;white-space:nowrap;}
+    .brand em{font-style:italic;}
+    .header-center{display:flex;align-items:center;gap:16px;flex:1;justify-content:center;}
+    .taxa-toggle{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:0.1em;color:var(--dim2);}
+    .toggle{position:relative;width:36px;height:20px;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .slider{position:absolute;inset:0;background:#333;border-radius:20px;cursor:pointer;transition:.3s;}
+    .slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+    input:checked+.slider{background:var(--gold);}
+    input:checked+.slider::before{transform:translateX(16px);}
+    .clock{font-size:10px;color:var(--dim);letter-spacing:0.1em;}
+    .btn-nova{background:var(--gold);color:#000;border:none;padding:9px 18px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.15em;cursor:pointer;white-space:nowrap;}
+    .btn-nova:hover{background:var(--gold2);}
+
+    /* MAIN */
+    .main{display:grid;grid-template-columns:1fr var(--panel-w,360px);flex:1;overflow:hidden;}
+
+    /* PAINEL ESQUERDO */
+    .panel-left{display:flex;flex-direction:column;overflow:hidden;}
+    .panel-hd{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg2);}
+    .panel-label{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--dim);}
+    .badge{background:var(--gold);color:#000;font-size:10px;font-weight:700;padding:2px 8px;}
+
+    .comandas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:14px;overflow-y:auto;flex:1;align-content:start;}
+    .comanda-card{background:var(--bg2);border:1px solid var(--line2);padding:14px;cursor:pointer;transition:all .2s;position:relative;}
+    .comanda-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+    .comanda-card.active{border-color:var(--gold);background:var(--gold3);}
+    .c-nome{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;margin-bottom:2px;}
+    .c-tempo{font-size:9px;color:var(--dim);letter-spacing:0.1em;margin-bottom:10px;}
+    .c-itens{font-size:10px;color:var(--dim2);margin-bottom:6px;}
+    .c-total{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);}
+    .c-taxa{font-size:9px;color:var(--dim);margin-top:2px;}
+    .c-btns{display:flex;gap:6px;margin-top:10px;}
+    .btn-c{flex:1;padding:6px 4px;border:none;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.08em;cursor:pointer;text-transform:uppercase;}
+    .btn-sel{background:var(--bg3);color:var(--text);border:1px solid var(--line2);}
+    .btn-sel:hover{border-color:var(--gold);}
+    .btn-ver{background:var(--bg3);color:var(--gold);border:1px solid #2a2a00;}
+    .btn-ver:hover{background:var(--gold3);}
+    .btn-cancel{background:var(--bg3);color:var(--red);border:1px solid #2a0000;}
+    .btn-cancel:hover{background:rgba(239,68,68,0.08);}
+    .empty-msg{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--dim);}
+    .empty-msg h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--text);margin-bottom:6px;}
+
+    /* PAINEL DIREITO: PRODUTOS */
+    .panel-right{display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);border-left:1px solid var(--line);min-width:240px;max-width:620px;}
+    .search-wrap{padding:10px;border-bottom:1px solid var(--line);}
+    .search-input{width:100%;background:var(--bg3);border:1px solid var(--line2);color:var(--text);padding:9px 13px;font-family:'JetBrains Mono',monospace;font-size:12px;}
+    .search-input:focus{outline:none;border-color:var(--gold);}
+    .search-input::placeholder{color:var(--dim);}
+    .prod-tabs{display:flex;border-bottom:1px solid var(--line);flex-shrink:0;overflow-x:auto;}
+    .prod-tab{padding:8px 12px;font-size:9px;letter-spacing:0.1em;color:var(--dim2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+    .prod-tab:hover{color:var(--text);}
+    .prod-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+    .prod-list{overflow-y:auto;flex:1;}
+    .prod-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;}
+    .prod-item:hover{background:var(--gold3);}
+    .prod-item-info{flex:1;min-width:0;}
+    .prod-item-nome{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .prod-item-sub{font-size:9px;color:var(--dim);margin-top:1px;}
+    .prod-item-preco{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);white-space:nowrap;}
+    .btn-add{width:26px;height:26px;background:var(--gold);color:#000;border:none;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .btn-add:hover{background:var(--gold2);}
+    .btn-add:disabled{background:var(--line);color:var(--dim);cursor:not-allowed;}
+    .no-sel{padding:40px 16px;text-align:center;color:var(--dim);font-size:11px;}
+
+    /* MODAIS */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:16px;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--bg2);border:1px solid var(--line2);width:100%;max-width:500px;max-height:92vh;display:flex;flex-direction:column;}
+    .modal-hd{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;}
+    .modal-title em{color:var(--gold);font-style:italic;}
+    .btn-close{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;line-height:1;}
+    .btn-close:hover{color:var(--text);}
+    .modal-body{flex:1;overflow-y:auto;}
+    .modal-ft{padding:14px 22px;border-top:1px solid var(--line);background:var(--bg);flex-shrink:0;}
+
+    /* Itens no modal */
+    .item-row{display:flex;align-items:center;gap:10px;padding:10px 22px;border-bottom:1px solid var(--line);}
+    .item-nome{flex:1;font-size:12px;}
+    .qty-ctrl{display:flex;align-items:center;gap:5px;}
+    .qty-btn{width:22px;height:22px;background:var(--bg3);border:1px solid var(--line2);color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .qty-btn:hover{border-color:var(--gold);}
+    .qty-n{font-size:12px;min-width:18px;text-align:center;}
+    .item-sub{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold);min-width:68px;text-align:right;}
+    .btn-del{background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;opacity:.5;}
+    .btn-del:hover{opacity:1;}
+
+    /* Resumo */
+    .resumo-row{display:flex;justify-content:space-between;padding:5px 0;font-size:11px;color:var(--dim2);}
+    .resumo-row.taxa{color:var(--orange);}
+    .resumo-row.total{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);padding-top:8px;}
+    .resumo-row.total span:first-child{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;color:var(--dim);align-self:flex-end;padding-bottom:4px;}
+
+    /* Pagamento */
+    .pay-section{margin-top:14px;}
+    .pay-label{font-size:9px;letter-spacing:0.2em;color:var(--dim);text-transform:uppercase;margin-bottom:8px;}
+    .pay-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+    .btn-pay{padding:10px 6px;border:1px solid var(--line2);background:var(--bg3);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;transition:all .2s;}
+    .btn-pay:hover{border-color:var(--gold);color:var(--gold);}
+    .btn-pay.pix{color:var(--green);border-color:#1a3a20;}
+    .btn-pay.pix:hover{background:rgba(74,222,128,.08);}
+
+    /* Pagamento parcial */
+    .parcial-section{margin-top:10px;padding:12px;background:var(--bg3);border:1px solid var(--line2);}
+    .parcial-title{font-size:9px;letter-spacing:0.15em;color:var(--orange);text-transform:uppercase;margin-bottom:8px;}
+    .parcial-row{display:flex;gap:8px;align-items:center;}
+    .parcial-input{flex:1;background:var(--bg);border:1px solid var(--line2);color:var(--text);padding:8px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;}
+    .parcial-input:focus{outline:none;border-color:var(--orange);}
+    .btn-parcial{padding:8px 14px;background:var(--orange);color:#000;border:none;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;}
+    .btn-parcial:hover{filter:brightness(1.1);}
+    .credito-info{margin-top:6px;font-size:10px;color:var(--green);display:none;}
+    .debito-info{margin-top:6px;font-size:10px;color:var(--red);display:none;}
+
+    /* Histórico de pagamentos parciais */
+    .pagamentos-lista{margin-top:8px;}
+    .pag-item{display:flex;justify-content:space-between;font-size:10px;color:var(--dim2);padding:3px 0;border-bottom:1px dashed var(--line);}
+    .pag-item span:last-child{color:var(--green);}
+
+    /* Nova comanda form */
+    .form-wrap{padding:22px;}
+    .form-label{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:7px;}
+    .form-input{width:100%;background:var(--bg3);border:1px solid var(--line2);color:var(--text);padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;margin-bottom:18px;}
+    .form-input:focus{outline:none;border-color:var(--gold);}
+    .btn-criar{width:100%;background:var(--gold);color:#000;border:none;padding:13px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:0.15em;cursor:pointer;}
+    .btn-criar:hover{background:var(--gold2);}
+
+    /* Toast */
+    .toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--gold);color:var(--text);padding:10px 18px;font-size:11px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast.green{border-color:var(--green);}
+    .toast.red{border-color:var(--red);}
+
+    .barcode-wrap{padding:8px 10px;border-bottom:2px solid var(--gold);background:rgba(201,169,97,0.04);}
+    .barcode-input{width:100%;background:var(--bg3);border:1px solid var(--gold);color:var(--gold2);padding:8px 13px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.1em;}
+    .barcode-input:focus{outline:none;background:rgba(201,169,97,0.08);}
+    .barcode-input::placeholder{color:var(--dim);font-size:11px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">club <em>alpha</em> · pdv <small style="font-size:9px;color:#666;letter-spacing:0.1em;font-family:'JetBrains Mono',monospace;font-style:normal;margin-left:8px;">v.2026.05.01-01</small></div>
+  <div class="header-center">
+    <div class="taxa-toggle">
+      <span>TAXA 20%</span>
+      <label class="toggle">
+        <input type="checkbox" id="taxaToggle" onchange="toggleTaxa()" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="clock" id="clock"></div>
+  </div>
+  <button class="btn-nova" onclick="abrirNovaComanda()">+ NOVA COMANDA</button>
+</header>
+
+<div class="main">
+  <!-- COMANDAS -->
+  <div class="panel-left">
+    <div class="panel-hd">
+      <span class="panel-label">Comandas abertas</span>
+      <span class="badge" id="totalComandas">0</span>
+    </div>
+    <div class="comandas-grid" id="comandasGrid">
+      <div class="empty-msg"><h3>Nenhuma comanda aberta</h3><p>Clique em "+ NOVA COMANDA"</p></div>
+    </div>
+  </div>
+
+  <!-- PRODUTOS -->
+  <div class="panel-right">
+    <!-- CÓDIGO DE BARRAS -->
+    <div class="barcode-wrap">
+      <input type="text" class="barcode-input" id="barcodeInput"
+        placeholder="&#128247; Bipe o código de barras aqui"
+        autocomplete="off" autocorrect="off" spellcheck="false" />
+    </div>
+    <div class="search-wrap">
+      <input type="text" class="search-input" placeholder="Buscar produto..." id="prodSearch" oninput="filtrar()" />
+    </div>
+    <div class="prod-tabs" id="prodTabs"></div>
+    <div class="prod-list" id="prodList">
+      <div class="no-sel">Selecione ou crie uma comanda</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA COMANDA -->
+<div class="modal-overlay" id="modalNova">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-hd">
+      <div class="modal-title">Nova <em>comanda</em></div>
+      <button class="btn-close" onclick="fecharModal('modalNova')">×</button>
+    </div>
+    <div class="form-wrap">
+      <label class="form-label">Nome do cliente ou mesa</label>
+      <input type="text" class="form-input" id="inputNome" placeholder="Ex: João, Mesa 3..." onkeydown="if(event.key==='Enter')criarComanda()" />
+      <button class="btn-criar" onclick="criarComanda()">ABRIR COMANDA</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHE COMANDA -->
+<div class="modal-overlay" id="modalComanda">
+  <div class="modal">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="mNome">Comanda</div>
+        <div style="font-size:9px;color:var(--dim);margin-top:2px;" id="mTempo"></div>
+      </div>
+      <button class="btn-close" onclick="fecharModal('modalComanda')">×</button>
+    </div>
+    <div class="modal-body" id="mItens"></div>
+    <div class="modal-ft">
+      <!-- Resumo financeiro -->
+      <div id="resumoFinanceiro"></div>
+
+      <!-- Pagamento -->
+      <div class="pay-section">
+        <div class="pay-label">Fechar comanda — forma de pagamento</div>
+        <div class="pay-btns">
+          <button class="btn-pay pix" onclick="fecharComanda('pix')">◆ PIX</button>
+          <button class="btn-pay" onclick="fecharComanda('cartao')">▣ CARTÃO</button>
+          <button class="btn-pay" onclick="fecharComanda('dinheiro')">$ DINHEIRO</button>
+        </div>
+      </div>
+
+      <!-- Imprimir / PDF -->
+      <div style="display:flex;gap:6px;margin-top:8px;margin-bottom:2px;">
+        <button onclick="imprimirComanda()" style="flex:1;padding:8px;background:transparent;border:1px solid var(--line2);color:var(--dim2);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.1em;cursor:pointer;">&#128424; IMPRIMIR</button>
+        <button onclick="baixarPDF()" style="flex:1;padding:8px;background:transparent;border:1px solid var(--line2);color:var(--dim2);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.1em;cursor:pointer;">&#11015; SALVAR PDF</button>
+      </div>
+      <!-- Pagamento parcial -->
+      <div class="parcial-section">
+        <div class="parcial-title">⟳ Pagamento parcial / troco / crédito</div>
+        <div class="parcial-row">
+          <input type="number" class="parcial-input" id="inputParcial" placeholder="Valor recebido" step="0.01" oninput="calcularParcial()" />
+          <button class="btn-parcial" onclick="registrarParcial()">REGISTRAR</button>
+        </div>
+        <div class="credito-info" id="creditoInfo"></div>
+        <div class="debito-info" id="debitoInfo"></div>
+        <div class="pagamentos-lista" id="pagamentosLista"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://wxkwkfkidigeuupaajre.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4a3drZmtpZGlnZXV1cGFhanJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNjAzOTUsImV4cCI6MjA5MjczNjM5NX0.HQqpN2EJqRc-3l7DNna659pxn_keGLiTK_p3rObHW7w';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── PRODUTOS FIXOS ──
+const LARICAS = [
+  // Bar
+  {id:'l1',nome:'Red Bull',preco:20,cat:'🍺 Bar'},
+  {id:'l2',nome:'Monster',preco:20,cat:'🍺 Bar'},
+  {id:'l3',nome:'Smirnoff Ice',preco:20,cat:'🍺 Bar'},
+  {id:'l4',nome:'Chequemate Lata',preco:20,cat:'🍺 Bar'},
+  {id:'l5',nome:'Corona 330ml',preco:20,cat:'🍺 Bar'},
+  {id:'l6',nome:'Bali Lata',preco:12,cat:'🍺 Bar'},
+  {id:'l7',nome:'Citrus',preco:15,cat:'🍺 Bar'},
+  {id:'l8',nome:'Champanhe Rosé',preco:40,cat:'🍺 Bar'},
+  {id:'l9',nome:'Dose Jack Daniel\'s',preco:40,cat:'🍺 Bar'},
+  {id:'l10',nome:'Gin Tanqueray',preco:40,cat:'🍺 Bar'},
+  {id:'l11',nome:'Gin (outro)',preco:30,cat:'🍺 Bar'},
+  // Bebidas
+  {id:'b1',nome:'Coca-Cola Lata',preco:10,cat:'🥤 Bebidas'},
+  {id:'b2',nome:'Coca-Cola 1,5L',preco:20,cat:'🥤 Bebidas'},
+  {id:'b3',nome:'Suco',preco:10,cat:'🥤 Bebidas'},
+  {id:'b4',nome:'Chá Leão Açaí',preco:10,cat:'🥤 Bebidas'},
+  {id:'b5',nome:'Chá Leão Limão',preco:10,cat:'🥤 Bebidas'},
+  {id:'b6',nome:'Chá Leão Verde',preco:10,cat:'🥤 Bebidas'},
+  {id:'b7',nome:'Chá Leão Pêssego',preco:10,cat:'🥤 Bebidas'},
+  {id:'b8',nome:'Guaraná',preco:10,cat:'🥤 Bebidas'},
+  {id:'b9',nome:'Água sem gás',preco:10,cat:'🥤 Bebidas'},
+  {id:'b10',nome:'Água com gás',preco:10,cat:'🥤 Bebidas'},
+  {id:'b11',nome:'Energético',preco:20,cat:'🥤 Bebidas'},
+  // Snacks
+  {id:'s1',nome:'Amendoim Japonês',preco:20,cat:'🍿 Snacks'},
+  {id:'s2',nome:'Paçoca',preco:5,cat:'🍿 Snacks'},
+  {id:'s3',nome:'Elma Chips',preco:8,cat:'🍿 Snacks'},
+  // Rosh
+  {id:'r1',nome:'Rosh Premium',preco:50,cat:'💨 Rosh'},
+  {id:'r2',nome:'Rosh Especial',preco:70,cat:'💨 Rosh'},
+  {id:'r3',nome:'Rosh VIP',preco:100,cat:'💨 Rosh'},
+  // Club Alpha Membership
+  {id:'m1',nome:'Club Alpha · Bronze / Day Use',preco:150,cat:'⭐ Club Alpha'},
+  {id:'m2',nome:'Club Alpha · Prata / Acesso',preco:300,cat:'⭐ Club Alpha'},
+  {id:'m3',nome:'Club Alpha · Ouro / VIP Anual',preco:800,cat:'⭐ Club Alpha'},
+];
+
+// ── ESTADO ──
+let comandas = {};
+let comandaAtiva = null;
+let todosProds = [];
+let tabAtiva = '🍺 Bar';
+let searchTerm = '';
+let taxaAtiva = true;
+
+// ── RELÓGIO ──
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleDateString('pt-BR')+' · '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(tick,1000);tick();
+
+function fmt(v){
+  // Arredonda pra cima e mostra valor fechado
+  const arredondado = Math.ceil(Number(v));
+  return 'R$ '+arredondado.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+}
+function arred(v){ return Math.ceil(Number(v)); }
+
+// ── TAXA ──
+function toggleTaxa(){
+  taxaAtiva=document.getElementById('taxaToggle').checked;
+  renderComandas();
+  if(comandaAtiva)renderDetalhe(comandaAtiva);
+}
+
+function calcTotal(c){
+  const sub=arred(c.itens.reduce((s,i)=>s+i.preco*i.qtd,0));
+  const pago=arred(c.pagamentos.reduce((s,p)=>s+p.valor,0));
+  const taxa=taxaAtiva?arred(sub*0.2):0;
+  const total=sub+taxa;
+  const restante=Math.max(0,total-pago);
+  const credito=Math.max(0,pago-total);
+  return{sub,taxa,total,pago,restante,credito};
+}
+
+// ── TOAST ──
+function toast(msg,tipo=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast show'+(tipo?' '+tipo:'');
+  setTimeout(()=>el.className='toast',2500);
+}
+
+// ── CARREGAR PRODUTOS ──
+async function carregarProdutos(){
+  try{
+    const{data}=await sb.from('produtos').select('id,nome,codigo,codigo_barras,preco,preco_pix,subcategoria,categorias(nome)').eq('ativo',true).gt('estoque',0).order('nome');
+    todosProds=data||[];
+  }catch(e){console.warn(e);}
+  renderTabs();renderProdutos();
+}
+
+// ── TABS ──
+function getTabs(){
+  const cats=new Set(LARICAS.map(p=>p.cat));
+  cats.add('🔍 Estoque loja');
+  return[...cats];
+}
+function renderTabs(){
+  document.getElementById('prodTabs').innerHTML=getTabs().map(t=>
+    `<div class="prod-tab ${t===tabAtiva?'active':''}" onclick="setTab('${t.replace(/'/g,"\\'")}')">${t}</div>`
+  ).join('');
+}
+function setTab(t){tabAtiva=t;renderTabs();renderProdutos();}
+
+// ── PRODUTOS ──
+function filtrar(){searchTerm=document.getElementById('prodSearch').value.toLowerCase();renderProdutos();}
+
+function renderProdutos(){
+  const lista=document.getElementById('prodList');
+  let items=[];
+  if(searchTerm){
+    const lf=LARICAS.filter(p=>p.nome.toLowerCase().includes(searchTerm));
+    const pf=todosProds.filter(p=>p.nome.toLowerCase().includes(searchTerm));
+    items=[...lf.map(p=>({...p,tipo:'l'})),...pf.map(p=>({id:p.id,nome:p.nome,preco:p.preco_pix||p.preco,cat:p.categorias?.nome||'',tipo:'p'}))];
+  }else if(tabAtiva==='🔍 Estoque loja'){
+    items=todosProds.map(p=>({id:p.id,nome:p.nome,preco:p.preco_pix||p.preco,cat:p.subcategoria||p.categorias?.nome||'',tipo:'p'}));
+  }else{
+    items=LARICAS.filter(p=>p.cat===tabAtiva).map(p=>({...p,tipo:'l'}));
+  }
+  if(!items.length){lista.innerHTML='<div class="no-sel">Nenhum produto encontrado</div>';return;}
+  lista.innerHTML=items.map(p=>`
+    <div class="prod-item" onclick="addItem('${p.id}','${p.nome.replace(/'/g,"\\'")}',${p.preco},'${p.tipo}')">
+      <div class="prod-item-info">
+        <div class="prod-item-nome">${p.nome}</div>
+        ${p.cat?`<div class="prod-item-sub">${p.cat}</div>`:''}
+      </div>
+      <div class="prod-item-preco">${fmt(p.preco)}</div>
+      <button class="btn-add" ${!comandaAtiva?'disabled':''}>+</button>
+    </div>`).join('');
+}
+
+// ── CRIAR COMANDA ──
+function abrirNovaComanda(){document.getElementById('inputNome').value='';document.getElementById('modalNova').classList.add('open');setTimeout(()=>document.getElementById('inputNome').focus(),80);}
+function criarComanda(){
+  const nome=document.getElementById('inputNome').value.trim();
+  if(!nome){toast('Digite um nome');return;}
+  const id='c'+Date.now();
+  comandas[id]={id,nome,hora:new Date(),itens:[],pagamentos:[]};
+  fecharModal('modalNova');
+  renderComandas();
+  selecionarComanda(id);
+  toast('Comanda "'+nome+'" aberta!','green');
+}
+
+// ── RENDER COMANDAS ──
+function renderComandas(){
+  const ids=Object.keys(comandas);
+  document.getElementById('totalComandas').textContent=ids.length;
+  const grid=document.getElementById('comandasGrid');
+  if(!ids.length){grid.innerHTML='<div class="empty-msg"><h3>Nenhuma comanda aberta</h3><p>Clique em "+ NOVA COMANDA"</p></div>';return;}
+  grid.innerHTML=ids.map(id=>{
+    const c=comandas[id];
+    const{sub,taxa,total,pago,restante}=calcTotal(c);
+    const min=Math.floor((new Date()-c.hora)/60000);
+    const nItens=c.itens.reduce((s,i)=>s+i.qtd,0);
+    return`<div class="comanda-card ${comandaAtiva===id?'active':''}">
+      <div class="c-nome">${c.nome}</div>
+      <div class="c-tempo">${c.hora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · ${c.hora.toLocaleDateString('pt-BR')}</div>
+      <div class="c-tempo" style="color:var(--dim)">${min<1?'aberta agora':min+' min aberta'}</div>
+      <div class="c-itens">${nItens} item${nItens!==1?'s':''}</div>
+      <div class="c-total">${fmt(restante>0?restante:total)}</div>
+      ${pago>0?`<div class="c-taxa" style="color:var(--orange)">pago: ${fmt(pago)}</div>`:''}
+      ${taxaAtiva?`<div class="c-taxa">+taxa: ${fmt(taxa)}</div>`:''}
+      <div class="c-btns">
+        <button class="btn-c btn-sel" onclick="selecionarComanda('${id}')">SELEC.</button>
+        <button class="btn-c btn-ver" onclick="abrirDetalhe('${id}')">VER →</button>
+        <button class="btn-c btn-cancel" onclick="cancelarComanda('${id}',event)">✕ CANCEL</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selecionarComanda(id){comandaAtiva=id;renderComandas();renderProdutos();}
+
+// ── ADICIONAR ITEM ──
+function addItem(prodId,nome,preco,tipo){
+  if(!comandaAtiva){toast('Selecione uma comanda!');return;}
+  const c=comandas[comandaAtiva];
+  const ex=c.itens.find(i=>i.id===prodId);
+  if(ex)ex.qtd++;
+  else c.itens.push({id:prodId,nome,preco:Number(preco),qtd:1,tipo});
+  renderComandas();
+  toast('+'+nome,'green');
+}
+
+// ── DETALHE COMANDA ──
+function abrirDetalhe(id){
+  const c=comandas[id];
+  comandaAtiva=id;
+  const min=Math.floor((new Date()-c.hora)/60000);
+  document.getElementById('mNome').innerHTML='<em>'+c.nome+'</em>';
+  document.getElementById('mTempo').textContent=c.hora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+c.hora.toLocaleDateString('pt-BR')+'  —  '+(min<1?'aberta agora':min+' min aberta');
+  renderDetalhe(id);
+  document.getElementById('modalComanda').classList.add('open');
+}
+
+function renderDetalhe(id){
+  const c=comandas[id];
+  const{sub,taxa,total,pago,restante,credito}=calcTotal(c);
+
+  // Itens
+  document.getElementById('mItens').innerHTML=c.itens.length===0
+    ?'<div class="no-sel">Nenhum item. Feche e adicione produtos.</div>'
+    :c.itens.map((item,idx)=>`
+      <div class="item-row">
+        <div class="item-nome">${item.nome}</div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="altQtd('${id}',${idx},-1)">−</button>
+          <span class="qty-n">${item.qtd}</span>
+          <button class="qty-btn" onclick="altQtd('${id}',${idx},1)">+</button>
+        </div>
+        <div class="item-sub">${fmt(item.preco*item.qtd)}</div>
+        <button class="btn-del" onclick="delItem('${id}',${idx})">×</button>
+      </div>`).join('');
+
+  // Resumo financeiro
+  let resumo=`<div class="resumo-row"><span>Subtotal</span><span>${fmt(sub)}</span></div>`;
+  if(taxaAtiva)resumo+=`<div class="resumo-row taxa"><span>Taxa de serviço (20%)</span><span>+ ${fmt(taxa)}</span></div>`;
+  if(pago>0)resumo+=`<div class="resumo-row" style="color:var(--green)"><span>Já pago</span><span>− ${fmt(pago)}</span></div>`;
+  resumo+=`<div class="resumo-row total"><span>TOTAL</span><span>${fmt(restante>0?restante:total)}</span></div>`;
+  if(credito>0)resumo+=`<div style="color:var(--green);font-size:11px;margin-top:4px;">✓ CRÉDITO DO CLIENTE: ${fmt(credito)}</div>`;
+  document.getElementById('resumoFinanceiro').innerHTML=resumo;
+
+  // Histórico parciais
+  const pagsEl=document.getElementById('pagamentosLista');
+  if(c.pagamentos.length>0){
+    pagsEl.innerHTML='<div style="font-size:9px;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Pagamentos registrados</div>'+
+      c.pagamentos.map(p=>`<div class="pag-item"><span>${p.forma.toUpperCase()} · ${new Date(p.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span><span>+ ${fmt(p.valor)}</span></div>`).join('');
+  }else{
+    pagsEl.innerHTML='';
+  }
+}
+
+function altQtd(id,idx,d){
+  const c=comandas[id];
+  c.itens[idx].qtd+=d;
+  if(c.itens[idx].qtd<=0)c.itens.splice(idx,1);
+  renderDetalhe(id);renderComandas();
+}
+function delItem(id,idx){
+  comandas[id].itens.splice(idx,1);
+  renderDetalhe(id);renderComandas();
+}
+
+// ── PAGAMENTO PARCIAL ──
+function calcularParcial(){
+  if(!comandaAtiva)return;
+  const val=parseFloat(document.getElementById('inputParcial').value)||0;
+  if(!val){document.getElementById('creditoInfo').style.display='none';document.getElementById('debitoInfo').style.display='none';return;}
+  const{restante}=calcTotal(comandas[comandaAtiva]);
+  const diff=val-restante;
+  const ci=document.getElementById('creditoInfo');
+  const di=document.getElementById('debitoInfo');
+  if(diff>0){ci.style.display='block';ci.textContent=`Troco / crédito: ${fmt(diff)}`;di.style.display='none';}
+  else if(diff<0){di.style.display='block';di.textContent=`Ainda falta: ${fmt(-diff)}`;ci.style.display='none';}
+  else{ci.style.display='block';ci.textContent='Valor exato ✓';di.style.display='none';}
+}
+
+function registrarParcial(){
+  if(!comandaAtiva){toast('Selecione uma comanda!');return;}
+  const val=parseFloat(document.getElementById('inputParcial').value)||0;
+  if(val<=0){toast('Informe um valor válido');return;}
+  const c=comandas[comandaAtiva];
+  c.pagamentos.push({valor:val,forma:'parcial',ts:Date.now()});
+  document.getElementById('inputParcial').value='';
+  document.getElementById('creditoInfo').style.display='none';
+  document.getElementById('debitoInfo').style.display='none';
+  renderDetalhe(comandaAtiva);renderComandas();
+  toast(`${fmt(val)} registrado!`,'green');
+}
+
+// ── SENHA ADMIN ──
+const SENHA_PDV = '1234'; // ← altere para sua senha
+
+function pedirSenha(callback) {
+  const senha = prompt('🔒 Digite a senha para confirmar:');
+  if (senha === SENHA_PDV) { callback(); }
+  else if (senha !== null) { toast('Senha incorreta!','red'); }
+}
+
+// ── FLUXO DE PAGAMENTO COM CONFIRMAÇÃO ──
+function fecharComanda(forma) {
+  const c = comandas[comandaAtiva];
+  if (!c || !c.itens.length) { toast('Comanda vazia!'); return; }
+  const {sub,taxa,total,pago,restante,credito} = calcTotal(c);
+  const valorFinal = arred(restante > 0 ? restante : total);
+
+  if (forma === 'pix') {
+    mostrarPagamentoPix(valorFinal);
+  } else {
+    mostrarConfirmacaoPagamento(forma, valorFinal);
+  }
+}
+
+// ── MODAL DE CONFIRMAÇÃO PARA CARTÃO/DINHEIRO ──
+function mostrarConfirmacaoPagamento(forma, valor) {
+  const c = comandas[comandaAtiva];
+  const icone = forma === 'cartao' ? '💳' : '💵';
+  const titulo = forma === 'cartao' ? 'Pagamento com Cartão' : 'Pagamento em Dinheiro';
+  const instrucao = forma === 'cartao'
+    ? 'Passe o cartão do cliente no seu app ou maquininha agora.\n\nApós confirmar o pagamento no seu sistema, volte aqui e insira a senha para fechar.'
+    : 'Receba o dinheiro do cliente agora.\n\nApós confirmar, insira a senha para fechar a comanda.';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'modalConfirmPag';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML = `
+    <div style="background:#111;border:1px solid #333;max-width:380px;width:100%;padding:28px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">${icone}</div>
+      <div style="font-family:Cormorant Garamond,serif;font-size:22px;color:#c9a961;margin-bottom:4px;">${titulo}</div>
+      <div style="font-family:Cormorant Garamond,serif;font-size:40px;color:#c9a961;margin-bottom:16px;">${fmt(valor)}</div>
+      <p style="font-size:13px;color:#888;line-height:1.6;margin-bottom:24px;">${instrucao}</p>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('modalConfirmPag').remove()" style="flex:1;padding:14px;background:#1a1a1a;color:#888;border:1px solid #333;font-family:JetBrains Mono,monospace;font-size:10px;cursor:pointer;letter-spacing:.1em;">CANCELAR</button>
+        <button onclick="confirmarPagamentoFisico('${forma}',${valor})" style="flex:1;padding:14px;background:#c9a961;color:#000;border:none;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.1em;">✓ CONFIRMAR PAGO</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function confirmarPagamentoFisico(forma, valor) {
+  document.getElementById('modalConfirmPag')?.remove();
+  pedirSenha(() => confirmarFechamento(forma, valor));
+}
+window.confirmarPagamentoFisico = confirmarPagamentoFisico;
+
+// ── PIX: QR CODE + WHATSAPP ──
+function mostrarPagamentoPix(valor) {
+  const c = comandas[comandaAtiva];
+  const PIX_KEY = '11942920076';
+  const PIX_NAME = 'Alpha Galerie';
+  const PIX_CITY = 'Barueri';
+  const txid = 'PDV' + Date.now().toString().slice(-8);
+
+  function field(id,val){const len=val.length.toString().padStart(2,'0');return`${id}${len}${val}`;}
+  const ma=field('00','BR.GOV.BCB.PIX')+field('01',PIX_KEY);
+  let payload=field('00','01')+field('26',ma)+field('52','0000')+field('53','986')+field('54',valor.toFixed(2))+field('58','BR')+field('59',PIX_NAME.slice(0,25))+field('60',PIX_CITY.slice(0,15))+field('62',field('05',txid.slice(0,25)));
+  const crcP=payload+'6304';let crc=0xFFFF;
+  for(let i=0;i<crcP.length;i++){crc^=crcP.charCodeAt(i)<<8;for(let j=0;j<8;j++)crc=(crc&0x8000)?((crc<<1)^0x1021):(crc<<1);crc&=0xFFFF;}
+  payload+='6304'+crc.toString(16).toUpperCase().padStart(4,'0');
+
+  // Criar modal de Pix
+  const overlay = document.createElement('div');
+  overlay.id = 'modalPixPdv';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;';
+  overlay.innerHTML = `
+    <div style="background:#111;border:1px solid #c9a961;max-width:380px;width:100%;padding:24px;text-align:center;">
+      <div style="font-family:Cormorant Garamond,serif;font-size:22px;color:#c9a961;margin-bottom:4px;">Pix · <em>${c.nome}</em></div>
+      <div style="font-family:Cormorant Garamond,serif;font-size:36px;color:#c9a961;margin-bottom:16px;">${fmt(valor)}</div>
+      <canvas id="qrPdv" style="background:#fff;padding:8px;"></canvas>
+      <div style="margin:12px 0;font-size:11px;color:#666;">Ou copie a chave:</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <input id="pixKeyPdv" readonly value="${payload}" style="flex:1;background:#0a0a0a;border:1px solid #222;color:#f0ece4;padding:8px;font-size:10px;font-family:JetBrains Mono,monospace;" />
+        <button onclick="copiarPixPdv()" style="padding:8px 12px;background:#c9a961;color:#000;border:none;font-weight:700;cursor:pointer;font-size:10px;">COPIAR</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="enviarWhatsAppPdv('${c.nome}',${valor},'${payload}')" style="flex:1;padding:12px;background:#25D366;color:#000;border:none;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.1em;">📲 WHATSAPP</button>
+        <button onclick="confirmarPixPdv()" style="flex:1;padding:12px;background:#4ade80;color:#000;border:none;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.1em;">✓ PAGO</button>
+        <button onclick="document.getElementById('modalPixPdv').remove()" style="padding:12px 16px;background:#222;color:#888;border:1px solid #333;font-family:JetBrains Mono,monospace;font-size:10px;cursor:pointer;">×</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Gerar QR
+  if(window.QRCode){
+    QRCode.toCanvas(document.getElementById('qrPdv'),payload,{width:200,margin:1,color:{dark:'#000',light:'#fff'}});
+  }
+}
+
+function copiarPixPdv(){
+  navigator.clipboard.writeText(document.getElementById('pixKeyPdv').value);
+  toast('Chave Pix copiada!','green');
+}
+
+function enviarWhatsAppPdv(nome,valor,pix){
+  const msg=`*Club Alpha PDV*\n\n*${nome}* — *${fmt(valor)}*\n\nChave Pix:\n${pix}`;
+  window.open('https://wa.me/55?text='+encodeURIComponent(msg),'_blank');
+}
+
+function confirmarPixPdv(){
+  document.getElementById('modalPixPdv')?.remove();
+  pedirSenha(()=>confirmarFechamento('pix'));
+}
+
+
+function itensAdminBackupComanda(c) {
+  try {
+    return (c.itens || []).map(function(i) {
+      var qtd = Number(i.qtd || 1);
+      var preco = Number(i.preco || 0);
+      return {
+        produto_nome: i.nome || 'Produto',
+        quantidade: qtd,
+        preco_unitario: preco,
+        subtotal: preco * qtd
+      };
+    });
+  } catch(e) { return []; }
+}
+
+async function inserirItensPedidoPDVBlindado(pedidoId, itens) {
+  if (!pedidoId || !itens || !itens.length) return { ok:false, error:'Comanda sem itens' };
+  var tentativas = [];
+  tentativas.push(itens.map(function(i) {
+    var pid = Number(i.id);
+    var qtd = Number(i.qtd || 1);
+    var preco = Number(i.preco || 0);
+    return {
+      pedido_id: pedidoId,
+      produto_id: (i.tipo === 'p' && Number.isFinite(pid)) ? pid : null,
+      produto_nome: i.nome || 'Produto',
+      quantidade: qtd,
+      preco_unitario: arred(preco),
+      subtotal: arred(preco * qtd),
+      variacao_id: i.variacaoId || null
+    };
+  }));
+  tentativas.push(itens.map(function(i) {
+    var qtd = Number(i.qtd || 1);
+    var preco = Number(i.preco || 0);
+    return {
+      pedido_id: pedidoId,
+      produto_nome: i.nome || 'Produto',
+      quantidade: qtd,
+      preco_unitario: arred(preco),
+      subtotal: arred(preco * qtd)
+    };
+  }));
+  var ultimoErro = null;
+  for (var t=0; t<tentativas.length; t++) {
+    var res = await sb.from('pedido_itens').insert(tentativas[t]);
+    if (!res.error) return { ok:true };
+    ultimoErro = res.error;
+    console.warn('Falha ao salvar itens PDV tentativa '+(t+1), res.error);
+  }
+  return { ok:false, error: ultimoErro };
+}
+
+// ── CONFIRMAR E FECHAR ──
+async function confirmarFechamento(forma, valorOverride) {
+  const c = comandas[comandaAtiva];
+
+  // ── PROTEÇÃO 1: comanda existe e tem itens ─────────────────────────
+  if (!c) {
+    alert('⚠ ERRO CRÍTICO: comanda não encontrada. Pedido NÃO foi salvo. Avise o gerente.');
+    return;
+  }
+  if (!Array.isArray(c.itens) || c.itens.length === 0) {
+    alert('⚠ ERRO: a comanda está sem itens. Pedido NÃO foi salvo.');
+    return;
+  }
+
+  // ── PROTEÇÃO 2: gerar backup ANTES de qualquer coisa, com try/catch ─
+  let backupItensStr = '';
+  let backupItensArr = [];
+  try {
+    backupItensArr = itensAdminBackupComanda(c);
+    backupItensStr = JSON.stringify(backupItensArr);
+    if (!backupItensStr || backupItensStr === '[]' || backupItensStr === 'null') {
+      throw new Error('Backup de itens vazio');
+    }
+  } catch (e) {
+    console.error('FALHA AO GERAR BACKUP DE ITENS:', e);
+    if (!confirm('⚠ ATENÇÃO: não foi possível gerar o backup dos itens.\n\nSe continuar, o pedido será salvo SEM registro dos produtos vendidos.\n\nIsso é PERIGOSO. Recomendamos cancelar e tentar novamente.\n\nClique OK só se você anotou os itens manualmente. Cancelar para abortar.')) {
+      return;
+    }
+  }
+
+  const {sub,taxa,total,pago,restante,credito} = calcTotal(c);
+  const valorFinal = valorOverride || arred(restante > 0 ? restante : total);
+  const numPedido = 'PDV'+Date.now().toString().slice(-8);
+
+  // ── BACKUP NA FRENTE da obs (não no fim) — mais resistente a truncamento ──
+  let obs = 'ITENS_ADMIN_JSON=' + encodeURIComponent(backupItensStr);
+  obs += ' · PDV · Club Alpha · '+forma.toUpperCase();
+  if(taxaAtiva) obs += ` · Taxa 20%: ${fmt(arred(taxa))}`;
+  if(pago>0) obs += ` · Pago anteriormente: ${fmt(arred(pago))}`;
+  if(credito>0) obs += ` · CRÉDITO: ${fmt(arred(credito))}`;
+
+  // ── Snapshot dos itens em coluna separada (se existir) ──────────────
+  // Tenta gravar em coluna 'itens_snapshot' jsonb. Se a coluna não existir,
+  // o try/catch da chamada principal lida.
+  const dadosPedido = {
+    numero: numPedido,
+    cliente_nome: c.nome,
+    cliente_whatsapp: '',
+    subtotal: arred(sub),
+    frete: 0,
+    total: arred(total),
+    forma_pagamento: forma,
+    tipo_entrega: 'retirada',
+    observacoes: obs,
+    status: 'pago',
+  };
+
+  let pedidoSalvo = null;
+  let itensFalharam = true;
+  try {
+    // Primeira tentativa: COM itens_snapshot
+    let resPed = await sb.from('pedidos').insert({...dadosPedido, itens_snapshot: backupItensArr}).select().single();
+    if (resPed.error) {
+      // Coluna pode não existir — tenta sem itens_snapshot
+      console.warn('Insert com itens_snapshot falhou, tentando sem:', resPed.error);
+      resPed = await sb.from('pedidos').insert(dadosPedido).select().single();
+    }
+    if (resPed.error) throw resPed.error;
+    pedidoSalvo = resPed.data;
+
+    if (pedidoSalvo) {
+      const resItens = await inserirItensPedidoPDVBlindado(pedidoSalvo.id, c.itens);
+      if (resItens.ok) {
+        itensFalharam = false;
+      } else {
+        console.error('Pedido PDV criado, mas pedido_itens falhou. Backup em obs ainda vale:', resItens.error);
+      }
+    }
+  } catch(e) {
+    console.error('ERRO PDV:', e);
+    alert('⚠ ERRO ao salvar o pedido no banco:\n\n' + (e.message || e) + '\n\nO pedido pode NÃO ter sido salvo. Verifique no admin antes de cobrar.');
+    return; // não deleta a comanda local
+  }
+
+  // ── Aviso visual se a tabela pedido_itens falhou (mas o backup salvou) ──
+  if (itensFalharam) {
+    toast('⚠ Pedido salvo no backup. Avise o gerente.', 'red');
+  }
+
+  const msg = credito > 0
+    ? `✓ ${c.nome} · ${fmt(arred(total))} · Crédito: ${fmt(arred(credito))}`
+    : `✓ ${c.nome} · ${fmt(valorFinal)} · ${forma.toUpperCase()}`;
+
+  delete comandas[comandaAtiva];
+  fecharModal('modalComanda');
+  comandaAtiva = null;
+  renderComandas(); renderProdutos();
+  if (!itensFalharam) toast(msg, 'green');
+}
+
+
+// -- BARCODE --
+let _bcTimer = null;
+document.addEventListener('DOMContentLoaded', function() {
+  const bc = document.getElementById('barcodeInput');
+  if (!bc) return;
+  bc.addEventListener('input', function() {
+    clearTimeout(_bcTimer);
+    _bcTimer = setTimeout(function() {
+      const v = bc.value.trim();
+      if (v.length >= 4) { buscarBarcode(v); bc.value = ''; }
+    }, 120);
+  });
+  bc.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      clearTimeout(_bcTimer);
+      const v = bc.value.trim();
+      if (v.length >= 4) { buscarBarcode(v); bc.value = ''; }
+    }
+  });
+});
+
+function buscarBarcode(codigo) {
+  const prod = todosProds.find(function(p) {
+    return p.codigo_barras === codigo || p.codigo === codigo;
+  });
+  if (!prod) { toast('Código não encontrado: ' + codigo, 'red'); return; }
+  if (!comandaAtiva) { toast('Selecione uma comanda primeiro!', 'red'); return; }
+  addItem(prod.id, prod.nome, prod.preco_pix || prod.preco, 'p');
+}
+
+// -- COMPROVANTE / IMPRIMIR / PDF --
+function gerarTextoComprovante() {
+  const c = comandas[comandaAtiva];
+  if (!c) return null;
+  const calc = calcTotal(c);
+  const sub = calc.sub, taxa = calc.taxa, total = calc.total;
+  const pago = calc.pago, restante = calc.restante, credito = calc.credito;
+  const agora = new Date().toLocaleString('pt-BR', {
+    hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+
+  // Monta linhas do comprovante como array de strings — sem HTML
+  const linhas = [];
+  linhas.push('================================');
+  linhas.push('        ALPHA GALERIE');
+  linhas.push('      CLUB ALPHA  -  PDV');
+  linhas.push('   Alphaville - Barueri - SP');
+  linhas.push('================================');
+  linhas.push('Cliente: ' + c.nome);
+  linhas.push('Data: ' + agora);
+  linhas.push('--------------------------------');
+  c.itens.forEach(function(i) {
+    const sub2 = fmt(i.preco * i.qtd);
+    linhas.push(i.qtd + 'x ' + i.nome);
+    linhas.push('   ' + sub2);
+  });
+  linhas.push('--------------------------------');
+  linhas.push('Subtotal:          ' + fmt(sub));
+  if (taxaAtiva) linhas.push('Taxa (20%):        ' + fmt(taxa));
+  if (pago > 0)  linhas.push('Ja pago:       - ' + fmt(pago));
+  if (credito > 0) linhas.push('Credito:       + ' + fmt(credito));
+  linhas.push('================================');
+  linhas.push('TOTAL:             ' + fmt(restante > 0 ? restante : total));
+  linhas.push('================================');
+  linhas.push('  Obrigado pela preferencia!');
+  linhas.push('  alphagalerie.netlify.app');
+  linhas.push('  +55 11 94292-0076');
+  return linhas.join('\n');
+}
+
+function gerarHtmlSeguro() {
+  const texto = gerarTextoComprovante();
+  if (!texto) return null;
+  // Monta HTML via createElement — nunca via string com tags
+  const doc = document.implementation.createHTMLDocument('Comprovante');
+  const style = doc.createElement('style');
+  style.textContent = [
+    'body{font-family:Courier New,monospace;font-size:12px;color:#000;',
+    'background:#fff;width:80mm;margin:0;padding:8px;white-space:pre;}',
+    '@media print{@page{margin:0;size:80mm auto;}}'
+  ].join('');
+  doc.head.appendChild(style);
+  const pre = doc.createElement('pre');
+  pre.textContent = texto;
+  doc.body.appendChild(pre);
+  return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+}
+
+function imprimirComanda() {
+  if (!comandaAtiva || !comandas[comandaAtiva]) { toast('Selecione uma comanda', 'red'); return; }
+  const html = gerarHtmlSeguro();
+  if (!html) return;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank', 'width=440,height=620');
+  if (!win) { toast('Permita pop-ups no navegador', 'red'); return; }
+  win.onload = function() {
+    URL.revokeObjectURL(url);
+    setTimeout(function() { win.print(); }, 300);
+  };
+}
+
+function baixarPDF() {
+  if (!comandaAtiva || !comandas[comandaAtiva]) { toast('Selecione uma comanda', 'red'); return; }
+  const html = gerarHtmlSeguro();
+  if (!html) return;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank', 'width=440,height=620');
+  if (!win) { toast('Permita pop-ups no navegador', 'red'); return; }
+  win.onload = function() {
+    URL.revokeObjectURL(url);
+    setTimeout(function() {
+      win.print();
+      toast('Escolha "Salvar como PDF" na impressao', 'green');
+    }, 300);
+  };
+}
+
+async function cancelarComanda(id, event) {
+  if (event) event.stopPropagation();
+  const c = comandas[id];
+  if (!c) return;
+
+  // Confirmar — sempre, pois vai registrar no banco
+  const temItens = c.itens.length > 0;
+  const msg = temItens
+    ? 'Cancelar comanda de ' + c.nome + '?\n' + c.itens.length + ' item(ns) serão perdidos.\nEssa ação não pode ser desfeita.'
+    : 'Cancelar comanda de ' + c.nome + '?';
+  if (!confirm(msg)) return;
+
+  // Registrar no banco como cancelado (aparece no retaguarda)
+  try {
+    const numPedido = 'PDV' + Date.now().toString().slice(-8);
+    const calc = calcTotal(c);
+    const backupArr = temItens ? itensAdminBackupComanda(c) : [];
+    const backupStr = JSON.stringify(backupArr);
+    const obs = 'ITENS_ADMIN_JSON=' + encodeURIComponent(backupStr) + ' · PDV · Club Alpha · CANCELADO pelo operador';
+    const dadosPed = {
+      numero: numPedido,
+      cliente_nome: c.nome,
+      cliente_whatsapp: '',
+      subtotal: calc.sub,
+      frete: 0,
+      total: calc.total,
+      forma_pagamento: null,
+      tipo_entrega: 'retirada',
+      observacoes: obs,
+      status: 'cancelado',
+    };
+    let resPed = await sb.from('pedidos').insert({...dadosPed, itens_snapshot: backupArr}).select().single();
+    if (resPed.error) {
+      // coluna itens_snapshot pode não existir
+      resPed = await sb.from('pedidos').insert(dadosPed).select().single();
+    }
+    const ped = resPed.data;
+
+    // Registrar os itens também (se houver), para ter histórico completo
+    if (ped && temItens) {
+      const resItensCancel = await inserirItensPedidoPDVBlindado(ped.id, c.itens);
+      if (!resItensCancel.ok) console.warn('Cancelamento registrado sem itens em pedido_itens:', resItensCancel.error);
+    }
+  } catch(e) {
+    console.warn('Erro ao registrar cancelamento:', e);
+    // Mesmo com erro no banco, cancela localmente
+  }
+
+  if (comandaAtiva === id) {
+    comandaAtiva = null;
+    fecharModal('modalComanda');
+  }
+  delete comandas[id];
+  renderComandas();
+  renderProdutos();
+  toast('Comanda cancelada e registrada', 'red');
+}
+
+
+function fecharModal(id){document.getElementById(id).classList.remove('open');}
+setInterval(renderComandas,60000);
+carregarProdutos();
+renderComandas();
+</script>
+</body>
+</html>
